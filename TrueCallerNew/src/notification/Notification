@@ -1,0 +1,76 @@
+import java.time.LocalDateTime;
+import java.util.*;
+
+// Observer Pattern Interfaces
+interface Observer {
+    void update(String message);
+}
+
+interface Subject {
+    void registerObserver(Observer observer);
+    void removeObserver(Observer observer);
+    void notifyObservers(String message);
+}
+
+// Notification Service (Observer)
+class NotificationService implements Observer {
+    @Override
+    public void update(String message) {
+        System.out.println("Notification Service: " + message);
+    }
+}
+
+// Logging Service (Observer)
+class LoggingService implements Observer {
+    @Override
+    public void update(String message) {
+        System.out.println("Logging Service: " + message);
+    }
+}
+
+// Spam Service (Subject)
+class SpamService implements Subject {
+    private static SpamService instance;
+    private final Map<String, Integer> spamCount = new HashMap<>();
+    private final Set<String> spamNumbers = new HashSet<>();
+    private final List<Observer> observers = new ArrayList<>();
+
+    private SpamService() {}
+
+    public static synchronized SpamService getInstance() {
+        if (instance == null) {
+            instance = new SpamService();
+        }
+        return instance;
+    }
+
+    public void reportSpam(String phNo, String reportingNumber, String reason) {
+        int count = spamCount.getOrDefault(phNo, 0) + 1;
+        spamCount.put(phNo, count);
+        if (count >= Constants.MAX_SPAMREPORT_COUNT) {
+            spamNumbers.add(phNo);
+            notifyObservers("Number " + phNo + " has been marked as spam.");
+        }
+    }
+
+    public boolean isSpam(String phNo) {
+        return spamNumbers.contains(phNo);
+    }
+
+    @Override
+    public void registerObserver(Observer observer) {
+        observers.add(observer);
+    }
+
+    @Override
+    public void removeObserver(Observer observer) {
+        observers.remove(observer);
+    }
+
+    @Override
+    public void notifyObservers(String message) {
+        for (Observer observer : observers) {
+            observer.update(message);
+        }
+    }
+}

@@ -4,6 +4,7 @@ import java.util.*;
 
 import static model.common.Constants.MAX_SPAMREPORT_COUNT;
 
+
 public class Spam {
 
     public static Spam spam;

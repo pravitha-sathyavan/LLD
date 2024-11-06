@@ -1,0 +1,13 @@
+public class AccountFactory {
+    public Account createPersonalUser(String phNo, String userName, String password, UserType userType) {
+        PersonalUser user = new PersonalUser();
+        user.registerAccount(phNo, userName, password, userType);
+        return user;
+    }
+
+    public Account createBusinessUser(String phNo, String userName, String password, UserType userType, BusinessInfo businessInfo) {
+        BusinessUser user = new BusinessUser();
+        user.registerAccount(phNo, userName, password, userType, businessInfo);
+        return user;
+    }
+}
