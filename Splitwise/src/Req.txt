@@ -1,0 +1,60 @@
+Splitwise
+
+Requirements
+1. User able to register using mobile no and create profile
+2. User able to create an event
+3. User able to add members to the event, member can accept or reject the event
+4. Each member of group should be able to add an expense and choose team members to divide it with
+5. Edit or delete or reject an expense
+6. Automatically, the split bill for each person generated (equal split, % split, exact amount split)
+7. User should get notification when a bill gets generated in his/her name
+8. User should get notification when bill gets paid
+
+
+Class Structure
+Account
+    username
+    id
+    password
+    mobileno
+    email
+    List<Event> events;
+
+Event
+    id
+    title
+    Date
+    Admin
+    List<Members>
+    List<Member, amount> balances
+    List<Expense>
+
+Expense
+    id
+    title
+    Amount
+    List<Share>
+    PaidBy
+    Criteria
+
+Share
+    Member
+    Amount
+
+Bill
+    From
+    To
+    amount
+    date
+    status
+
+
+Design patterns
+    split criteria -> strategy
+    Factory -> expense creation based on split type
+    Notification to user-> observer
+    creating event -> builder
+
+
+
+
