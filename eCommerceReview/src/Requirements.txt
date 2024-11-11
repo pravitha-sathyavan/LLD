@@ -1,0 +1,84 @@
+User able to register, login, logout (handled by different Userservice)
+User can search a product he purchased (handled by different Productservice)
+User can give Rating to the item (1 to 5) he purchased
+User can give comments to the purchased item (mandatory)
+User can upload images and videos (optional)
+User can edit or delete a review
+User can view reviews associated with an item
+Each product should display an average rating and total no of reviews
+User can sort review by most recent, highly rated or most helpful
+Enable keyword search within reviews
+Filter reviews by date, rating
+User can mark a review as helpful
+Automated content filtering for offensive language
+Store can raise a dispute on a review
+Admin able to reject or delete some reviews
+Send notification to store when a new review is added
+
+User (in ReviewService)
+    userId
+    userName
+    phNo
+    List<Product> productsPurchased
+
+Product (in ReviewService)
+    productId
+    productName
+    sellerId
+    averageRating
+    reviewCount
+    List<Review> reviews
+
+Review
+    reviewId
+    userId
+    productId
+    rating (Enum 1 to 5)
+    comment
+    List<String> media
+    Status (enum - Approved, Rejected, Pending)
+    datePosted
+    List<String> LikedUserIds;
+
+Seller
+    sellerId
+    name
+    List<Product> products
+
+
+ReviewDispute
+    reviewId
+    sellerId
+    reason
+    status
+    adminId
+
+SERVICE
+    ReviewCreationService
+        boolean addReview(userId, productId, rating, comment, List<String> media, datePosted)
+        toggleVote(reviewId, userId)
+        editReview(reviewId, newRating, newComment, boolean keepMedia)
+        deleteReview(reviewId)
+        validateReviewContent()
+
+    ReviewSearchService
+        viewReviews(productId, int page, int pageSize) -- consider pagination for this method
+        viewAverageRating(productId)
+        sortReviews(productId, sortCriteria) -- strategy design pattern
+        filterReviews(productid, String keyword)
+        filterReviews(productid, Rating rating)
+        filterReviews(productid, Date date)
+
+    ReviewDisputeService
+        raiseDispute(reviewId, sellerId, reason) -> get stored somewhere
+        validateReviewByAdmin(reviewId, sellerId, reason) -> approveReview(reviewId, adminId) / rejectReview(reviewId, adminId)
+
+    NotificationService -- observer design pattern
+        notifySeller(Review review)
+        notifyUser(Review review)
+
+Authentication in ReviewService using APIKey
+    A user logs into the e-commerce platform using OAuth or another authentication service.
+    After successful authentication, the user is issued an API key linked to their account.
+    When the user wants to post a review, the request would include the API key for authorization,
+        and the server checks the API key to confirm if the user is authorized to post a review. This could be part of the request headers.
