@@ -1,0 +1,7 @@
+What happens if multiple clients try to add tasks simultaneously?
+
+The PriorityBlockingQueue used in your code is inherently thread-safe.
+It allows multiple threads to concurrently add tasks without additional synchronization.
+
+The idCounter in your code is an AtomicInteger, which ensures atomicity.
+Each increment operation (idCounter.incrementAndGet()) is thread-safe and guarantees unique task IDs without race conditions.

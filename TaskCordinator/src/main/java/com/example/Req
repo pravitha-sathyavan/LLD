@@ -1,0 +1,37 @@
+
+
+Develop and implement a Task Coordinator system with the following requirements:
+
+1. Task Addition: The system should allow tasks to be added with the following attributes:
+	Task name
+	Priority level
+	Execution time
+
+2. Task Execution: The system should execute tasks based on their priority:
+	- Higher priority tasks should be executed before lower priority tasks.
+	- If multiple tasks have the same priority, they should be executed in the order they were added.
+
+3. Task Status Monitoring: The system should monitor and update the status of each task, which can be one of the following: Pending, In Progress, Completed. Task execution can be simulated by sleeping for the specified amount of time.
+
+4. External Interaction: The system should allow external systems to submit tasks and query task status
+
+
+TASK: class
+id
+name
+priortity - enum
+execTime - int
+createdTime
+status - enum
+sericeProviderId
+
+Queue<Task>
+
+
+
+
+
+
+
+
+

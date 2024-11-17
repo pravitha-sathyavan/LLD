@@ -1,0 +1,10 @@
+How can you make the system resilient to application crashes?
+
+Store tasks in a durable database (e.g., relational databases like MySQL or PostgreSQL, or NoSQL databases like MongoDB or Cassandra).
+When tasks are added, persist them immediately to the database, marking their status as Pending.
+Use a unique identifier for each task to avoid duplication during recovery.
+
+
+How would you handle task retries in case of failure?
+Use a database or distributed queue for retryable tasks to ensure they are not lost in case of a crash.
+Failed tasks can be moved to a Dead Letter Queue (DLQ) or stored in a dedicated table for further analysis.

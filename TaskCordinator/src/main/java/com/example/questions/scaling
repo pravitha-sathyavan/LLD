@@ -1,0 +1,27 @@
+How would you scale this system for millions of tasks?
+
+Problem: Handling millions of tasks in memory can lead to resource exhaustion.
+Solutions:
+Sharding Queues:
+Partition tasks into multiple queues based on some attribute (e.g., priority, task type, or hash of the task ID).
+Use a consistent hashing strategy to distribute tasks evenly across queues.
+Distributed Queues:
+Use distributed queue systems like Apache Kafka, RabbitMQ, or Amazon SQS to manage tasks efficiently and scale horizontally.
+For priority ordering, use systems like Priority Queue in Redis or Apache Pulsar with topic partitioning.
+
+
+Problem: Single-threaded or limited-thread execution won't suffice for millions of tasks.
+Solutions:
+Thread Pool Scaling:
+Use a dynamic thread pool (ThreadPoolExecutor) with size adjustments based on workload.
+Limit the maximum pool size to avoid CPU thrashing.
+Task Executors:
+Use ScheduledExecutorService or ForkJoinPool for parallel processing of tasks.
+Assign different thread pools to different priority queues (high, medium, low).
+
+
+Problem: A single node will struggle to process millions of tasks efficiently.
+Solutions:
+Horizontal Scaling:
+Deploy the system on a cluster of servers.
+Use load balancers (e.g., NGINX or HAProxy) to distribute tasks across multiple task coordinators.
