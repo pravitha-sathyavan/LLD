@@ -1,0 +1,99 @@
+1. Registering the Topic
+When the event bus starts, we first register the topic "Sports".
+->     eventBus.registerTopic(new Topic("Sports"));
+
+Data Structures Initialized:
+buses: Stores the events for each topic. Initially empty for "Sports".
+subscriptions: Stores the subscriptions for the topic. Initially empty for "Sports".
+subscriberIndexes: Tracks the position of the last processed event for each subscriber for each topic. Initially empty for "Sports".
+timestampIndex: Stores event timestamps mapped to indexes. Initially empty.
+eventIndex: Stores event IDs mapped to indexes. Initially empty.
+
+
+2. Creating a Subscriber
+A subscriber subscribes to the "Sports" topic.
+This action adds the subscriber to the list of subscriptions and initializes their index position in the subscriberIndexes.
+
+->    Subscription subscription = new Subscription("Sports", "subscriber1", handler);
+      eventBus.subscribe(subscription);
+
+->    Subscription subscription = new Subscription(
+       "Sports",
+       "subscriber1",
+       event -> System.out.println("Processing event: " + event)
+      );
+      eventBus.subscribe(subscription);
+
+
+Subscription Added:
+"Sports" topic's subscription list now includes subscriber1.
+The subscriber's index is initialized to point to the latest event in the topic (in this case, 0 if no events are published).
+The handler in the Subscription represents a callback function or a processing logic that is executed when an event is pushed to the subscriber.
+It defines how the subscriber will process or handle the events it receives from the topic.
+
+
+3. Publishing an Event
+   An event (e.g., a sports score update) is published to the "Sports" topic.
+   The publish method is invoked, which triggers the addition of the event to the event bus.
+
+->      Event event = new Event("scoreUpdate", "Sports", "New score update for the match");
+        eventBus.publish(new Topic("Sports"), event);
+
+Event Flow:
+The publish method submits a task to the executor associated with the "Sports" topic.
+Inside the submit method, addEventToBus is called, which:
+        Adds the event to the buses.get("Sports") list.
+        Updates the timestampIndex and eventIndex with the new event and its index.
+        Triggers the push method to deliver the event to the subscriber.
+
+
+4. Pushing the Event to the Subscriber
+The push method attempts to send the event to the subscriber.
+It retrieves the subscriber's handler and invokes it.
+If the event handler fails (for example, due to a network issue), the retry mechanism will be triggered.
+
+private void push(Event event, Subscription subscription) {
+    executor.submit(subscription.getTopicId().getName() + subscription.getSubscriberId(),
+            () -> {
+                try {
+                    retryAlgorithm.attempt(subscription.handler(), event, 0);
+                } catch (RetryLimitExceededException e) {
+                    if (deadLetterQueue != null) {
+                        deadLetterQueue.publish(subscription.getTopicId(),
+                                new FailureEvent(event, e, timer.getTime()));
+                    } else {
+                        e.printStackTrace();
+                    }
+                }
+            });
+}
+Retry Mechanism:
+If the handler fails (e.g., a network failure), the retryAlgorithm tries to retry the operation up to a maximum number of attempts.
+If the retry limit is exceeded, the event is sent to the dead-letter queue (deadLetterQueue), where it can be inspected later.
+Otherwise, the failure is printed.
+
+
+5. Subscriber Polling for Events
+The subscriber can "poll" for new events. The poll method retrieves the event for the subscriber and updates their index in subscriberIndexes.
+
+->      Event polledEvent = eventBus.poll(new Topic("Sports"), new EntityID("subscriber1"));
+
+Event Retrieval:
+The poll method retrieves the index for subscriber1 from subscriberIndexes.
+It looks up the event in the buses.get("Sports") list using the index.
+The subscriber's index is incremented so that they are ready to retrieve the next event.
+The event is returned to the subscriber.
+
+
+6. Setting Subscriber Index After Event or Timestamp
+If the subscriber wants to start receiving events from a certain point, they can set their index based on a specific event ID or timestamp.
+
+After Event:
+->      eventBus.setIndexAfterEvent(new Topic("Sports"), new EntityID("subscriber1"), event.getId());
+Process:
+This method retrieves the index of the event with the given eventId and updates the subscriber's index accordingly.
+
+After Timestamp:
+->      eventBus.setIndexAfterTimestamp(new Topic("Sports"), new EntityID("subscriber1"), event.getTimestamp());
+Process:
+This method updates the subscriber's index based on a provided timestamp, ensuring that the subscriber receives events starting from a certain point in time.
