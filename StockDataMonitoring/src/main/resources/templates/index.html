@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Data Fetcher</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f7f9fc; /* Soft light background */
+        }
+        .wrapper {
+            display: flex;
+            max-width: 1200px;
+            width: 100%;
+            height: 80vh;
+            background: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .form-container {
+            flex: 1;
+            padding: 30px;
+            background-color: #f5f8fa; /* Slightly contrasting background */
+            border-right: 1px solid #e0e0e0;
+        }
+        .form-container h2 {
+            font-size: 24px;
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #444;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            margin-top: 5px;
+            transition: border-color 0.3s;
+        }
+        input:focus, select:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+            border: none;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .redirect-btn {
+            background-color: #28a745;
+            margin-top: 15px;
+        }
+        .redirect-btn:hover {
+            background-color: #218838;
+        }
+        .info-container {
+            flex: 2; /* Make the right container larger */
+            overflow-y: auto; /* Add vertical scrollbar */
+            padding: 30px;
+            background: #ffffff;
+        }
+        .metadata, .stock-prices {
+            margin-top: 20px;
+        }
+        .stock-prices table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+        .stock-prices th, .stock-prices td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: center;
+        }
+        .stock-prices th {
+            background-color: #007bff;
+            color: white;
+        }
+        .info-container::-webkit-scrollbar {
+            width: 8px;
+        }
+        .info-container::-webkit-scrollbar-thumb {
+            background-color: #ccc;
+            border-radius: 4px;
+        }
+        .info-container::-webkit-scrollbar-thumb:hover {
+            background-color: #999;
+        }
+    </style>
+</head>
+<body>
+
+<div class="wrapper">
+    <!-- Left Section: Form -->
+    <div class="form-container">
+        <h2>Stock Data Fetcher</h2>
+        <form id="stockForm">
+            <div class="form-group">
+                <label for="symbol">Symbol</label>
+                <input type="text" id="symbol" name="symbol" placeholder="Enter stock symbol" required>
+            </div>
+            <style>
+                #symbol {
+                    width: 90%; /* Adjust width to your preference, e.g., 50% of its container */
+                    margin: 0 auto; /* Center-align input field */
+                    display: block; /* Ensure it behaves like a block-level element for alignment */
+                }
+            </style>
+
+            <div class="form-group">
+                <label for="timeInterval">Time Interval</label>
+                <select id="timeInterval" name="timeInterval" required>
+                    <option value="1min">1 Minute</option>
+                    <option value="5min">5 Minutes</option>
+                    <option value="15min">15 Minutes</option>
+                    <option value="30min">30 Minutes</option>
+                    <option value="60min">1 Hour</option>
+                </select>
+            </div>
+            <button type="submit">Submit</button>
+        </form>
+        <button class="redirect-btn" id="redirectHome">Go to Home</button>
+    </div>
+
+    <!-- Right Section: Info -->
+    <div class="info-container">
+        <div class="metadata" id="metadata"></div>
+        <div class="stock-prices" id="stockPrices"></div>
+    </div>
+</div>
+
+<script>
+    // Form submission logic
+    document.getElementById("stockForm").addEventListener("submit", function (event) {
+        event.preventDefault();
+        const symbol = document.getElementById("symbol").value;
+        const timeInterval = document.getElementById("timeInterval").value;
+
+        const apiUrl = `http://localhost:8081/stockData/${symbol}/${timeInterval}`;
+
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json(); // Parse the response as JSON
+            })
+            .then(data => {
+                // Display MetaData
+                const metadataHtml = `
+                    <h3>MetaData</h3>
+                    <ul>
+                        <li><strong>Information:</strong> ${data.metaData.information}</li>
+                        <li><strong>Symbol:</strong> ${data.metaData.symbol}</li>
+                        <li><strong>Last Refreshed:</strong> ${data.metaData.lastRefreshed}</li>
+                        <li><strong>Interval:</strong> ${data.metaData.interval}</li>
+                        <li><strong>Output Size:</strong> ${data.metaData.outputSize}</li>
+                        <li><strong>Time Zone:</strong> ${data.metaData.timeZone}</li>
+                    </ul>
+                `;
+                document.getElementById("metadata").innerHTML = metadataHtml;
+
+                // Display Stock Prices
+                const stockPricesHtml = `
+                    <h3>Stock Prices</h3>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date/Time</th>
+                                <th>Open</th>
+                                <th>High</th>
+                                <th>Low</th>
+                                <th>Close</th>
+                                <th>Volume</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${data.stockPrices.map(price => `
+                                <tr>
+                                    <td>${price.dateTime}</td>
+                                    <td>${price.open}</td>
+                                    <td>${price.high}</td>
+                                    <td>${price.low}</td>
+                                    <td>${price.close}</td>
+                                    <td>${price.volume}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+                document.getElementById("stockPrices").innerHTML = stockPricesHtml;
+            })
+            .catch(error => {
+                console.error("Error fetching API:", error);
+                document.getElementById("metadata").innerHTML = `
+                    <h3>Error</h3>
+                    <p>Failed to fetch data from the backend. Please try again later.</p>
+                `;
+                document.getElementById("stockPrices").innerHTML = '';
+            });
+    });
+
+    // Redirect to home.html on button click
+    document.getElementById("redirectHome").addEventListener("click", function () {
+        window.location.href = "home";
+    });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Home</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f9f9f9;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 0;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        header h1 {
+            margin: 0;
+            color: #333;
+        }
+        header p {
+            margin: 5px 0;
+            color: #666;
+        }
+        .content {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            max-width: 1200px;
+        }
+        .left-panel {
+            width: 48%;
+            height: 70vh; /* Reduced height */
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+        .right-panel {
+            width: 48%;
+            height: 70vh;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+            overflow: hidden; /* Prevents overflow of the chart */
+        }
+
+        #detailsChart {
+            width: 100%;
+            height: 100%; /* Allow the chart to take full height */
+            max-height: calc(100% - 40px); /* Adjust for padding and header text */
+        }
+
+        h1, h2 {
+            color: #333;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            font-weight: bold;
+            margin-bottom: 8px;
+            color: #555;
+        }
+        input, select, button {
+            width: 100%;
+            padding: 10px;
+            font-size: 16px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        button {
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .fetch-button {
+            background-color: #007bff; /* Blue for Fetch Symbols */
+            color: white;
+        }
+        .fetch-button:hover {
+            background-color: #0056b3;
+        }
+        .subscribe-button {
+            background-color: #28a745; /* Green for Subscribe */
+            color: white;
+        }
+        .subscribe-button:hover {
+            background-color: #218838;
+        }
+        .unsubscribe-button {
+            background-color: #6c757d; /* Grey for Unsubscribe */
+            color: white;
+            width: 48%; /* Reduced width */
+        }
+        .unsubscribe-button:hover {
+            background-color: #5a6268;
+        }
+        .details-button {
+            background-color: #007bff; /* Blue for Get Details */
+            color: white;
+            width: 48%; /* Reduced width */
+            margin-right: 10px; /* Add space between buttons */
+        }
+        .details-button:hover {
+            background-color: #0056b3;
+        }
+        .scrollable-table {
+            flex: 1;
+            margin-top: 20px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #f9f9f9;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 10px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #007bff;
+            color: white;
+        }
+        .message {
+            font-size: 16px;
+            margin-top: 10px;
+            color: #333;
+        }
+        #logoutButton {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            transition: background-color 0.3s;
+            width: 150px;
+        }
+
+        #logoutButton:hover {
+            background-color: #e60000;
+        }
+
+    </style>
+</head>
+<body>
+<header>
+    <h1>Welcome, <span th:text="${name}">John Doe</span>!</h1>
+    <p><span th:text="${email}">john.doe@example.com</span></p>
+</header>
+
+<div class="content">
+    <div class="left-panel">
+        <h2>Subscription Manager</h2>
+
+        <div class="form-group">
+            <label for="symbol">Enter Stock Symbol to Subscribe</label>
+            <input type="text" id="symbolInput" name="symbol" placeholder="e.g., IBM" required>
+            <button class="fetch-button" id="fetchButton">Fetch Symbols</button>
+            <select id="symbolDropdown" style="display: none;" required>
+                <option value="">Select a symbol...</option>
+            </select>
+            <button class="subscribe-button" id="subscribeButton" style="display: none;">Subscribe</button>
+        </div>
+
+        <div class="scrollable-table">
+            <table id="subscribedTable">
+                <thead>
+                <tr>
+                    <th>Symbol</th>
+                    <th>Actions</th>
+                </tr>
+                </thead>
+                <tbody>
+                <!-- Dynamically filled -->
+                </tbody>
+            </table>
+        </div>
+        <button class="redirect-btn" id="redirectHome">Monitor Stock</button>
+    </div>
+
+    <div class="right-panel" id="detailsPanel">
+        <h2>Details</h2>
+        <p class="message" id="detailsMessage">Click "Get Details" to see details here.</p>
+        <canvas id="detailsChart" style="display: none; width: 100%; height: 300px;"></canvas>
+    </div>
+
+
+</div>
+
+<button id="logoutButton">Logout</button>
+
+
+<script>
+    const subscribedSymbols = new Set();
+    let availableSymbols = []; // To store the symbol objects returned from the match endpoint
+
+    document.getElementById("fetchButton").addEventListener("click", () => {
+        const symbol = document.getElementById("symbolInput").value.trim();
+
+        if (!symbol) {
+            alert("Please enter a valid stock symbol.");
+            return;
+        }
+
+        // Call the endpoint to fetch matching symbols
+        fetch(`/stockData/match/${symbol}`)
+            .then(response => response.json())
+            .then(data => {
+                availableSymbols = data; // Store fetched symbols
+                const dropdown = document.getElementById("symbolDropdown");
+                const subscribeButton = document.getElementById("subscribeButton");
+
+                // Clear existing options
+                dropdown.innerHTML = '<option value="">Select a symbol...</option>';
+
+                // Populate the dropdown with fetched symbols
+                data.forEach(symbolObj => {
+                    const option = document.createElement("option");
+                    option.value = symbolObj.name; // Set name as the value
+                    option.textContent = symbolObj.name; // Display name
+                    dropdown.appendChild(option);
+                });
+
+                // Show dropdown and subscribe button
+                dropdown.style.display = "block";
+                subscribeButton.style.display = "inline-block";
+            })
+            .catch(err => {
+                console.error(err);
+                alert("Error fetching symbols. Please try again.");
+            });
+    });
+
+    document.getElementById("logoutButton").addEventListener("click", () => {
+    // Clear any session data (example: localStorage or cookies)
+    localStorage.clear(); // Clears all local storage data
+    sessionStorage.clear(); // Clears all session storage data
+
+    // Redirect to the login page
+    window.location.href = "/login"; // Update this URL as per your application's routing
+});
+
+
+
+    document.getElementById("subscribeButton").addEventListener("click", () => {
+    const selectedName = document.getElementById("symbolDropdown").value;
+
+    if (!selectedName) {
+        alert("Please select a symbol.");
+        return;
+    }
+
+    // Find the corresponding symbol object
+    const selectedSymbol = availableSymbols.find(sym => sym.name === selectedName);
+
+    if (!selectedSymbol) {
+        alert("Error: Symbol not found.");
+        return;
+    }
+
+    if (subscribedSymbols.has(selectedSymbol.name)) {
+        alert("This symbol is already subscribed.");
+        return;
+    }
+
+    // Send symbol object to subscribe endpoint
+    fetch(`/stockData/subscribe/symbol`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(selectedSymbol)
+    })
+        .then(response => {
+            if (response.ok) {
+                subscribedSymbols.add(selectedSymbol.name); // Add to local set
+                subscribedSymbolsMap.set(selectedSymbol.name, selectedSymbol); // Update the map
+                updateSubscribedTable(); // Update UI
+                // Show success popup
+                alert(`Successfully subscribed to ${selectedSymbol.name}`);
+            } else {
+                alert("Failed to subscribe. Please try again.");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Error subscribing to the symbol.");
+        });
+});
+
+
+    function fetchSubscribedSymbols() {
+    fetch(`/stockData/subscribedSymbols`)
+        .then(response => response.json())
+        .then(data => {
+            subscribedSymbolsMap.clear();
+            data.forEach(symbolObj => subscribedSymbolsMap.set(symbolObj.name, symbolObj));
+            updateSubscribedTable();
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Error fetching subscribed symbols.");
+        });
+}
+
+
+    const subscribedSymbolsMap = new Map(); // Use a map to store subscribed symbols with their keys
+
+    function updateSubscribedTable() {
+    const tableBody = document.getElementById("subscribedTable").querySelector("tbody");
+    tableBody.innerHTML = ""; // Clear previous entries
+
+    subscribedSymbolsMap.forEach((symbolObj, symbolName) => {
+        const row = document.createElement("tr");
+
+        const symbolCell = document.createElement("td");
+        symbolCell.textContent = symbolName;
+
+        const actionsCell = document.createElement("td");
+
+        const detailsButton = document.createElement("button");
+        detailsButton.textContent = "Get Details";
+        detailsButton.className = "details-button";
+        detailsButton.onclick = () => showDetails(symbolObj.key);
+
+        const unsubscribeButton = document.createElement("button");
+        unsubscribeButton.textContent = "Unsubscribe";
+        unsubscribeButton.className = "unsubscribe-button";
+        unsubscribeButton.onclick = () => unsubscribeSymbol(symbolObj.key); // Pass the key instead of the name
+
+        actionsCell.appendChild(detailsButton);
+        actionsCell.appendChild(unsubscribeButton);
+
+        row.appendChild(symbolCell);
+        row.appendChild(actionsCell);
+
+        tableBody.appendChild(row);
+    });
+    }
+
+    function unsubscribeSymbol(symbolKey) {
+    fetch(`/stockData/unsubscribe/${symbolKey}`, { method: "DELETE" })
+        .then(response => {
+            if (response.ok) {
+                // Find and remove the corresponding entry in the map
+                for (let [symbolName, symbolObj] of subscribedSymbolsMap.entries()) {
+                    if (symbolObj.key === symbolKey) {
+                        subscribedSymbolsMap.delete(symbolName);
+                        break;
+                    }
+                }
+                updateSubscribedTable();
+                alert(`Unsubscribed from symbol with key: ${symbolKey}`);
+            } else {
+                alert("Failed to unsubscribe. Please try again.");
+            }
+        })
+        .catch(err => {
+            console.error(err);
+            alert("Error unsubscribing from the symbol.");
+        });
+}
+
+     let detailsChartInstance;
+    function showDetails(symbolName) {
+
+        const detailsMessage = document.getElementById("detailsMessage");
+        detailsMessage.textContent = `Fetching details for ${symbolName}...`;
+        const timeInterval = "5min";
+
+        fetch(`/stockData/${symbolName}/${timeInterval}`)
+            .then(response => response.json())
+            .then(data => {
+
+                detailsMessage.textContent = `Details for ${symbolName}`;
+
+                const labels = data.stockPrices.map(entry => entry.dateTime); // Extract timestamp
+                const values = data.stockPrices.map(entry => entry.close);
+
+                const chartContainer = document.getElementById("detailsChart");
+                chartContainer.style.display = "block";
+
+                if (detailsChartInstance) {
+                    // If a chart already exists, destroy it
+                    detailsChartInstance.destroy();
+                }
+
+                detailsChartInstance = new Chart(chartContainer, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: `${symbolName} Price`,
+                            data: values,
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderWidth: 2,
+                            fill: true,
+                            tension: 0.4
+                        }]
+                    },
+                    options: {
+                        responsive: true, // Makes the chart resize automatically
+                        maintainAspectRatio: false, // Ensures it fills the container
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: 'Timestamp'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Price'
+                                }
+                            }
+                        }
+                    }
+                });
+            })
+            .catch(err => {
+                console.error(err);
+                detailsMessage.textContent = "Error fetching details.";
+            });
+    }
+
+    // Fetch subscribed symbols on page load
+    window.onload = fetchSubscribedSymbols;
+
+    // Redirect to home.html on button click
+    document.getElementById("redirectHome").addEventListener("click", function () {
+        window.location.href = "index";
+    });
+
+
+</script>
+</body>
+</html>
