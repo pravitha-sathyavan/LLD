@@ -1,0 +1,35 @@
+Craft Assignment:  Stock Price Monitoring
+
+Note – If your experience is only on backend side then you can build the backend service only
+
+
+Assignment Instructions:
+Demonstrate the design of a stock price monitoring system.
+
+Programming Languages
+Any of Java, Python, NodeJS for backend.
+Any of React, Angular for frontend.
+
+Requirements:
+Read the stock data from https://www.alphavantage.co/documentation/#intraday and submit the data to the server. Pick a few available stock symbols of your choice.
+The server can persist the data into a database.
+An UI requires login through Google SSO. The user can manage the price change notification preference through an UI by choosing the stock symbols. The user can subscribe to multiple stock symbols.
+The server will notify the user when the price changes for the subscribed symbols.
+The server will not send more than one email per hour to each user.
+
+
+The service should cover the following actions:
+Asynchronously update the stock data from source
+SSO login
+Highly Available
+Highly scalable
+Fallback in case of failure of downstream services
+
+Areas to Keep in Mind:
+The purpose of this project is to give you the opportunity to demonstrate your end-to-end development thinking, problem solving skills, and technical skills.  As you’re developing, please be mindful of the following:
+
+Keeping razor sharp focus on performance (time and space complexity)
+Using appropriate data structures/algorithms
+Focus on systems design for scalability
+Ensure Testing/Quality
+
