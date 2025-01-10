@@ -1,0 +1,7 @@
+Logging should support multiple levels like DEBUG, INFO, WARN, ERROR, and FATAL
+Must handle 1 million concurrent logs per second, making asynchronous logging and buffering mandatory.
+ConsoleAppender: Logs to the console.
+FileAppender: Logs to a file.
+RollingFileAppender: Supports log rotation based on size or time.
+Provide configuration via a JSON file.
+Dynamically update logging behavior during runtime.
